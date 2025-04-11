@@ -1,4 +1,5 @@
 from promptAI.helper import waitForResponseChatGPT
+from wordpress.post import newEntrada
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -86,22 +87,22 @@ def promptChatGPT(title, reviews, image_url, description, enlace, driver) :
             )
                         
             try:
-                WebDriverWait(driver, 60).until(
+                WebDriverWait(driver, 90).until(
                     EC.presence_of_element_located((By.TAG_NAME, "code"))
                 )
                 respuesta = waitForResponseChatGPT(driver)
                 
-                if respuesta.text.strip():
-                    pyperclip.copy(respuesta.text)
+                if respuesta.strip():
+                    pyperclip.copy(respuesta)
                 else:
                     print("❌ La respuesta estaba vacía, no se copió al portapapeles.")
     
-                newEntrada(title, respuesta.text, driver)
+                newEntrada(title, respuesta, driver)
                 
             except Exception as e:
                 print(f"❌ No se pudo obtener la respuesta de ChatGPT: {e}")
     
-            newEntrada(title, respuesta.text, driver)
+            newEntrada(title, respuesta, driver)
         except:
             print("No se detectó el botón de 'Regenerar respuesta', copiando de todos modos...")
 

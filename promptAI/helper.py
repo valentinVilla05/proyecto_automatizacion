@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
-def waitForResponseChatGPT(driver, timeout=60, interval=1):
+def waitForResponseChatGPT(driver, timeout=100, interval=1):
     end_time = time.time() + timeout
     last_text = ""
     estable = 0

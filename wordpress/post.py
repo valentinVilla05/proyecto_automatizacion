@@ -1,10 +1,10 @@
 from datetime import datetime
-from var_config.py import *
+from var_config import *
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-def newEntrada(title, prompt, driver, entradaAnadida):
+def newEntrada(title, prompt, driver):
         
     print("Ha entrado en la función newEntrada")
     driver.get("https://ventiladoresdetechos.es/wp-admin/post-new.php")
@@ -33,10 +33,10 @@ def newEntrada(title, prompt, driver, entradaAnadida):
     input_code = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "post-content-0")))
     input_code.send_keys(prompt)
 
-    entradaAnadida = True
-    with open("log.txt", "a") as f:
-        f.write(f"[{datetime.now()}] Procesando: {title}\n")
-        if entradaAnadida:
-            f.write(f"✅ Entrada añadida correctamente\n\n")
-        else:
-            f.write(f"❌ Error al añadir entrada o no se completó: {title}\n\n")
+    #entradaAnadida = True
+    #with open("log.txt", "a") as f:
+    #    f.write(f"[{datetime.now()}] Procesando: {title}\n")
+    #    if entradaAnadida:
+    #        f.write(f"✅ Entrada añadida correctamente\n\n")
+    #    else:
+    #        f.write(f"❌ Error al añadir entrada o no se completó: {title}\n\n")
