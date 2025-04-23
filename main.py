@@ -6,8 +6,8 @@ import undetected_chromedriver as uc
 
 def main():
     lista_articulos = [
-        "Cecotec Ventilador de Techo con Luz...",
-        "ABRILA TODOLAMPARA Ventilador de techo..."
+        "Modernos Ventilador de Techo con Luz, 48cm Ventilador de Techo sin Aspascon luz y Mando a Distancia, Ventiladores de Techo Silencioso con Luz LED Motor CC Reversible para Dormitorio, Salón ",
+        "JARDIN202 - Ventilador de Techo LED con 4 Aspas 3500-4000-6500K Temporizador, 6 Velocidades, Aspas retráctiles | Tarifa (Blanco)"
     ]
     
     options = uc.ChromeOptions()

@@ -73,8 +73,10 @@ def promptChatGPT(title, reviews, image_url, description, enlace, driver) :
         f"Estructura de navegación mejorada. "
         f"Experiencia de usuario optimizada: Navegación intuitiva, Contenido segmentado, FAQ expandible, Tablas informativas. "
         f"No agregues CSS ni imágenes. No añadas un apartado de 'contenido'."
+        f"Asegurate de darme el codgigo HTML completo, no dejes etiquetas abiertas y no escribas emojis."
         )
         input_box.send_keys(mensaje)
+        time.sleep(1)
         input_box.send_keys(Keys.ENTER)
         
         time.sleep(4) # Esperar a que se procese la entrada

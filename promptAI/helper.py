@@ -11,18 +11,41 @@ def waitForResponseChatGPT(driver, timeout=100, interval=1):
     
     while time.time() < end_time:
         try:
-            response = driver.find_element(By.TAG_NAME, "code")
-            text = response.text.strip()
+            input_prompt = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.ID, "prompt-textarea"))
+            )
+            responses = driver.find_elements(By.TAG_NAME, "code")
+            text = responses[-1].text.strip() # Cogemos siempre el último bloque de codigo que nos haya dado
             
             if text == last_text:
                 estable += 1
                 if estable >= 3:
-                    print("La respuesta está completa")
-                    return text
+                    time.sleep(2)
+                    if text.endswith("</html>"):
+                        print("Esperando respuesta...")
+                        print("La respuesta está completa") 
+                        return text
+                    else:
+                        try:
+                            # Buscar botón "Continue Generating"
+                            continue_buttons = driver.find_elements(By.XPATH, "//*[contains(text(), 'Continue generating')]")
+                            if continue_buttons:
+                                print("Clickeando en 'Continue generating'...")
+                                continue_buttons[0].click()
+                            else:
+                                print("No se encontró botón 'Continue generating', enviando prompt manual...")
+                                input_prompt = driver.find_element(By.ID, "prompt-textarea")
+                                prompt = "No dejes el código a medias, dámelo completo, por favor."
+                                input_prompt.send_keys(prompt)
+                                input_prompt.send_keys(Keys.ENTER)
+                        except Exception as e:
+                            print(f"Error al manejar continuación o envío: {e}")
+
             else:
                 estable = 0
                 last_text = text
                 print("Esperando respuesta...")
+                time.sleep(3)
             
         except Exception as e:
             print(f"Error al obtener la respuesta: {e}")

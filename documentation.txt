@@ -1,0 +1,29 @@
+En caso de no tener los paquetes necesarios para crear un entorno virtual
+
+sudo apt install python3.12-venv
+
+1.- Creamos el entorno virtual:
+
+	python3 -m venv <nombre_entorno>
+
+2.- Activamos el entorno:
+
+	source <nombre_entorno>/bin/activate
+
+3.- Instalamos las librerias:
+
+	sudo apt install xclip
+	pip install -r requirements.txt
+	
+Esto instalará todas las librerias utilizadas por el proyecto las cuales vendrán indicadas en requirements.txt 
+
+4.- Instalar librerias distutils (En caso de error):
+  * Distutils es una librería que ya no viene incluida por defecto en Python 3.12 y no se puede instalar con pip por lo que hay que instalar los paquetes en el sistema
+  
+	sudo apt install python3-distutils
+	
+En caso de que esto de error, ejecutar este comando en el entorno -> pip install --upgrade setuptools
+
+Guardar todas las librerias usadas:
+	pip freeze > requirements.txt
+
