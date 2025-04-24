@@ -1,3 +1,12 @@
+from promptAI.helper import waitForResponseCopilot
+from wordpress.post import newEntrada
+import time
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+import pyperclip
+
 def promptCopilot(title, reviews, image_url, description, enlace, driver, entradaAnadida):
     # Navegar a Copilot
     driver.get("https://copilot.microsoft.com/")
@@ -58,7 +67,10 @@ def promptCopilot(title, reviews, image_url, description, enlace, driver, entrad
         f"No añadas ninguna marca que indique que está hecho con IA. "
         )
         input_box.send_keys(mensaje)
+        time.sleep(1)
         input_box.send_keys(Keys.ENTER)
+        
+        time.sleep(4)
 
         # Esperar respuesta
         print("Esperando respuesta de Copilot...")
@@ -71,22 +83,23 @@ def promptCopilot(title, reviews, image_url, description, enlace, driver, entrad
                 WebDriverWait(driver, 120).until(
                     EC.presence_of_element_located((By.TAG_NAME, "code"))
                 )
-                respuesta = driver.find_element(By.TAG_NAME, "code")
-                pyperclip.copy(respuesta.text)
-                print("✅ Respuesta copiada al portapapeles.")
-                newEntrada(title, respuesta.text, driver, entradaAnadida)
-            except Exception as e:
-                print(f"❌ No se pudo obtener la respuesta del Copilot: {e}")
+                respuesta = waitForResponseCopilot
+                
+                if respuesta.strip():
+                    pyperclip.copy(respuesta)
+                else:
+                    print("❌ La respuesta estaba vacía, no se copió al portapapeles.")
     
-            # Copiar al portapapeles
-            pyperclip.copy(respuesta.text)
-            print("✅ Respuesta copiada al portapapeles.")
-            newEntrada(title, respuesta.text, driver, entradaAnadida)
-        except:
-            print("No se detectó el botón de 'Regenerar respuesta', copiando de todos modos...")
+                newEntrada(title, respuesta, driver)
+                
+            except Exception as e:
+                print(f"❌ No se pudo obtener la respuesta de Copilot: {e}")
+    
+        except Exception as e:
+            print(f"Ha habido un error generando la respuestas: {e}")
 
     except Exception as e:
-        print(f"❌ Error durante la interacción con ChatGPT: {e}")
+        print(f"❌ Error durante la interacción con Copilot: {e}")
 
     finally:
         print("Proceso finalizado.")

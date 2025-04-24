@@ -4,6 +4,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+def enviar_prompt(input_element, prompt, partes=5, espera=1):
+    longitud_prompt = len(prompt)
+    bloque_codigo = longitud_prompt // partes 
+    
+    for i in range(partes):
+        inicio = i * bloque_codigo
+        fin = (i +1) * bloque_codigo if i < partes - 1 else longitud_prompt
+        bloque = prompt[inicio:fin]
+        
+        input_element.send_keys(bloque)
+        time.sleep(espera) 
+
 def newEntrada(title, prompt, driver):
         
     print("Ha entrado en la función newEntrada")
@@ -31,7 +43,7 @@ def newEntrada(title, prompt, driver):
     input_title.send_keys(title)
     
     input_code = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "post-content-0")))
-    input_code.send_keys(prompt)
+    enviar_prompt(input_code, prompt)
 
     #entradaAnadida = True
     #with open("log.txt", "a") as f:

@@ -104,9 +104,8 @@ def promptChatGPT(title, reviews, image_url, description, enlace, driver) :
             except Exception as e:
                 print(f"❌ No se pudo obtener la respuesta de ChatGPT: {e}")
     
-            newEntrada(title, respuesta, driver)
-        except:
-            print("No se detectó el botón de 'Regenerar respuesta', copiando de todos modos...")
+        except Exception as e:
+            print(f"Ha habido un error generando la respuestas: {e}")
 
     except Exception as e:
         print(f"❌ Error durante la interacción con ChatGPT: {e}")

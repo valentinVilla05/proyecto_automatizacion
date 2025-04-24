@@ -1,6 +1,6 @@
 from amazon.api import search_items
 from promptAI.chatgpt import promptChatGPT
-# from promptAI.copilot import promptCopilot
+from promptAI.copilot import promptCopilot
 from wordpress.post import newEntrada
 import undetected_chromedriver as uc
 
@@ -18,7 +18,11 @@ def main():
         data = search_items(articulo)
         if data:
             title, reviews, image_url, description, enlace = data
-            promptChatGPT(title, reviews, image_url, description, enlace, driver)
+            try:
+                promptChatGPT(title, reviews, image_url, description, enlace, driver)
+            except: 
+                print("Ha habido un error con ChatGPT. Probando con Copilot...")
+                promptCopilot(title, reviews, image_url, description, enlace, driver)
         else:
             print("⚠️ Artículo no encontrado.")
 
