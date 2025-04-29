@@ -3,18 +3,22 @@ from var_config import *
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
 
-def enviar_prompt(input_element, prompt, partes=5, espera=1):
-    longitud_prompt = len(prompt)
-    bloque_codigo = longitud_prompt // partes 
-    
-    for i in range(partes):
-        inicio = i * bloque_codigo
-        fin = (i +1) * bloque_codigo if i < partes - 1 else longitud_prompt
-        bloque = prompt[inicio:fin]
-        
-        input_element.send_keys(bloque)
-        time.sleep(espera) 
+def enviar_prompt(input_element, prompt, espera=1):
+    lineas = prompt.splitlines()
+    buffer = ""
+    max_caracteres = 300  
+
+    for linea in lineas:
+        if len(buffer + linea) > max_caracteres:
+            input_element.send_keys(buffer)
+            time.sleep(espera)
+            buffer = ""
+        buffer += linea + "\n"
+
+    if buffer.strip():
+        input_element.send_keys(buffer)
 
 def newEntrada(title, prompt, driver):
         
@@ -38,6 +42,7 @@ def newEntrada(title, prompt, driver):
             
     except Exception as e:
         print(f"❌ Error al iniciar sesión: {e}")
+        return False
     
     input_title = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "inspector-textarea-control-0")))
     input_title.send_keys(title)
@@ -45,10 +50,14 @@ def newEntrada(title, prompt, driver):
     input_code = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "post-content-0")))
     enviar_prompt(input_code, prompt)
 
-    #entradaAnadida = True
-    #with open("log.txt", "a") as f:
-    #    f.write(f"[{datetime.now()}] Procesando: {title}\n")
-    #    if entradaAnadida:
-    #        f.write(f"✅ Entrada añadida correctamente\n\n")
-    #    else:
-    #        f.write(f"❌ Error al añadir entrada o no se completó: {title}\n\n")
+
+    # Publicar entrada
+    # boton_publicar = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//*[@id=\"editor\"]/div/div[1]/div/div[1]/div/div[4]/button[2]")))
+    # boton_publicar.click()
+    # 
+    # confirmar_publicar = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//*[@id=\"editor\"]/div/div[1]/div/div[2]/div[3]/div[2]/div/div/div[1]/div[2]/button")))
+    # confirmar_publicar.click()
+    
+    
+    
+

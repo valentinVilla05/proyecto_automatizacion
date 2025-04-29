@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import pyperclip
 
-def promptCopilot(title, reviews, image_url, description, enlace, driver, entradaAnadida):
+def promptCopilot(title, reviews, image_url, description, enlace, driver):
     # Navegar a Copilot
     driver.get("https://copilot.microsoft.com/")
 
@@ -83,23 +83,26 @@ def promptCopilot(title, reviews, image_url, description, enlace, driver, entrad
                 WebDriverWait(driver, 120).until(
                     EC.presence_of_element_located((By.TAG_NAME, "code"))
                 )
-                respuesta = waitForResponseCopilot
+                respuesta = waitForResponseCopilot(driver)
                 
-                if respuesta.strip():
+                if respuesta.strip() and respuesta.strip().endswith("</html>"):
                     pyperclip.copy(respuesta)
+                    newEntrada(title, respuesta, driver)
+                    return True
                 else:
                     print("❌ La respuesta estaba vacía, no se copió al portapapeles.")
-    
-                newEntrada(title, respuesta, driver)
                 
             except Exception as e:
                 print(f"❌ No se pudo obtener la respuesta de Copilot: {e}")
+                return False
     
         except Exception as e:
             print(f"Ha habido un error generando la respuestas: {e}")
+            return False
 
     except Exception as e:
         print(f"❌ Error durante la interacción con Copilot: {e}")
+        return False
 
     finally:
         print("Proceso finalizado.")

@@ -71,19 +71,19 @@ def waitForResponseCopilot(driver, timeout=100, interval=1):
             
             if text == last_text:
                 estable += 1
-                if estable >= 5:
+                if estable >= 3:
                     time.sleep(2)
-                    if text.strip().lower().endswith("</html>"):
+                    if text.strip().lower().find("</html>") != -1:
                         print("Esperando respuesta...")
                         print("La respuesta está completa") 
                         return text
                     else:
-                        input_prompt = driver.find_element(By.ID, "prompt-textarea")
+                        input_prompt = driver.find_element(By.XPATH, "//*[@id=\"userInput\"]")
                         prompt = "No dejes el código a medias, dámelo completo, por favor."
                         input_prompt.send_keys(prompt)
                         time.sleep(1)
                         input_prompt.send_keys(Keys.ENTER)
-
+ 
             else:
                 estable = 0
                 last_text = text
