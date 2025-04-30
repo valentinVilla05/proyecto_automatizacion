@@ -85,7 +85,7 @@ def promptCopilot(title, reviews, image_url, description, enlace, driver):
                 )
                 respuesta = waitForResponseCopilot(driver)
                 
-                if respuesta.strip() and respuesta.strip().endswith("</html>"):
+                if respuesta.strip() and respuesta.strip().find("</html>") != -1:
                     pyperclip.copy(respuesta)
                     newEntrada(title, respuesta, driver)
                     return True
