@@ -18,7 +18,7 @@ def main(comprobar_cancelacion=lambda: cancelar):
     
     options = uc.ChromeOptions()
     options.headless = False  # Agregado manualmente para evitar el error interno
-    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-gpu") # Para compatibilidad
     driver = uc.Chrome(options=options, use_subprocess=True)
 
 
@@ -35,7 +35,7 @@ def main(comprobar_cancelacion=lambda: cancelar):
         data = search_items(articulo)
         if data:
             title, reviews, image_url, description, enlace = data
-            # Creamos el directorio de salida si no existe
+            # Creamos el directorio para guaradar las imágenes de salida si no existe
             directorio = "imagenes"
             if not os.path.exists(directorio):
                 os.makedirs(directorio)

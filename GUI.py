@@ -20,6 +20,7 @@ def terminar_ejecucion():
     global cancelar
     cancelar = True # Cambioamos el estado de la flag a True para que el hilo se detenga
     print("Cancelando ejecución...") # Mensaje de cancelación
+    root.destroy() # Cerramos la ventana de la GUI
     
 
 
