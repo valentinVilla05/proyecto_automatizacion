@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import urllib.parse
 
 def enviar_prompt(input_element, prompt, espera=1):
     lineas = prompt.splitlines()
@@ -20,10 +21,19 @@ def enviar_prompt(input_element, prompt, espera=1):
     if buffer.strip():
         input_element.send_keys(buffer)
 
-def newEntrada(title, prompt, driver):
+def newEntrada(title, prompt, driver, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD):
         
     print("Ha entrado en la función newEntrada")
-    driver.get("https://ventiladoresdetechos.es/wp-admin/post-new.php")
+    print(f"🧪 URL que se usará: '{WORDPRESS_URL}'")
+    
+    url_parseada = WORDPRESS_URL.rstrip("/")
+    if url_parseada.endswith("wp-admin/post-new.php"):
+        final_url = url_parseada
+    else:
+        final_url = url_parseada + "/wp-admin/post-new.php"
+
+    print(f"📦 URL final para abrir: '{final_url}'")
+    driver.get(final_url)
     
     email = WORDPRESS_EMAIL
     password = WORDPRESS_PASSWORD

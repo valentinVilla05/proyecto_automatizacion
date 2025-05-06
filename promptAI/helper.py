@@ -4,6 +4,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
+
+def cerrarVentanaEmergente(driver):
+    # Manejar posible botón emergente de inicio de sesión
+    try:
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="radix-«r1a»"]/div/div[1]/div/button'))).click()
+        print("Cerrando ventana emergente...")
+    except:
+        print("No se encontró ventana emergente.")
+
 def waitForResponseChatGPT(driver, timeout=100, interval=1):
     end_time = time.time() + timeout
     last_text = ""
@@ -34,6 +43,8 @@ def waitForResponseChatGPT(driver, timeout=100, interval=1):
                                 continue_buttons[0].click()
                             else:
                                 print("No se encontró botón 'Continue generating', enviando prompt manual...")
+                                cerrarVentanaEmergente(driver)
+                                # Enviar prompt manualmente
                                 input_prompt = driver.find_element(By.ID, "prompt-textarea")
                                 prompt = "No dejes el código a medias, dámelo completo, por favor."
                                 input_prompt.send_keys(prompt)
@@ -97,3 +108,4 @@ def waitForResponseCopilot(driver, timeout=100, interval=1):
     
     print("Esperando la respuesta completa.")
     return last_text
+

@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import pyperclip
 
-def promptCopilot(title, reviews, image_url, description, enlace, driver):
+def promptCopilot(title, reviews, image_url, description, enlace, driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD):
     # Navegar a Copilot
     driver.get("https://copilot.microsoft.com/")
 

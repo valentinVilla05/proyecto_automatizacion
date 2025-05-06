@@ -8,14 +8,16 @@ from selenium.webdriver.common.keys import Keys
 import pyperclip
 
 def cerrarVentanaEmergente(driver):
-    # Manejar posible botón emergente de inicio de sesión
     try:
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="radix-«r2g»"]/div/div/a'))).click()
-        print("Cerrando ventana emergente...")
-    except:
-        print("No se encontró ventana emergente.")
+        boton = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[.//div[text()='Stay logged out']]"))
+        )
+        boton.click()
+        print("✅ Ventana emergente cerrada con éxito.")
+    except Exception as e:
+        print(f"⚠️ No se pudo cerrar la ventana emergente: {e}")
 
-def promptChatGPT(title, reviews, image_url, description, enlace, driver) :
+def promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD):
     # Navegar a ChatGPT
     driver.get("https://chat.openai.com/")
 
@@ -96,7 +98,7 @@ def promptChatGPT(title, reviews, image_url, description, enlace, driver) :
                 
                 if respuesta.strip() and respuesta.strip().endswith("</html>"):
                     pyperclip.copy(respuesta)
-                    newEntrada(title, respuesta, driver)
+                    newEntrada(title, respuesta, driver, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD)
                     return True
                 else:
                     print(f"Respuesta vacia o incompleta")
