@@ -69,6 +69,9 @@ def main(comprobar_cancelacion=lambda: cancelar, config=None):
             # Crear nombre del archivo
             nombre_imagen = os.path.join(directorio, f"{nombre_limpio}.jpg")
             
+            directorio = os.path.dirname(os.path.abspath(__file__))
+            print(f"📁 Directorio del script: {directorio}")
+            
             try:
                 response = requests.get(image_url, timeout=10)
                 if response.status_code == 200:
@@ -81,7 +84,7 @@ def main(comprobar_cancelacion=lambda: cancelar, config=None):
                 print(f"❌ Excepción al descargar la imagen de {title}: {e}")
                 
                 
-            exito = promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD)
+            exito = promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD, directorio ,nombre_imagen)
 
             if exito:
                 articulos_exitosos.append(articulo)

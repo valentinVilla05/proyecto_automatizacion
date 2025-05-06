@@ -17,7 +17,7 @@ def cerrarVentanaEmergente(driver):
     except Exception as e:
         print(f"⚠️ No se pudo cerrar la ventana emergente: {e}")
 
-def promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD):
+def promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD, directorio ,nombre_imagen):
     # Navegar a ChatGPT
     driver.get("https://chat.openai.com/")
 
@@ -97,8 +97,7 @@ def promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNE
                 respuesta = waitForResponseChatGPT(driver)
                 
                 if respuesta.strip() and respuesta.strip().endswith("</html>"):
-                    pyperclip.copy(respuesta)
-                    newEntrada(title, respuesta, driver, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD)
+                    newEntrada(title, respuesta, driver, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD, directorio ,nombre_imagen)
                     return True
                 else:
                     print(f"Respuesta vacia o incompleta")
