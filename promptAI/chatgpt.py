@@ -16,12 +16,24 @@ def cerrarVentanaEmergente(driver):
         print("✅ Ventana emergente cerrada con éxito.")
     except Exception as e:
         print(f"⚠️ No se pudo cerrar la ventana emergente: {e}")
+        
+    try:
+        boton = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[div[text()='Reject non-essential']]"))
+        )
+        boton.click()
+        print("✅ Ventana de cookies cerrada con éxito.")
+    except Exception as e:
+        print(f"⚠️ No se pudo cerrar la ventana de cookies: {e}")
+    
+        
 
 def promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD, directorio ,nombre_imagen):
     # Navegar a ChatGPT
     driver.get("https://chat.openai.com/")
 
     try:
+        time.sleep(5)  # Esperar a que se cargue la página
         cerrarVentanaEmergente(driver)
         
         # Intentar hacer clic en el campo de entrada si está oculto
@@ -78,8 +90,11 @@ def promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNE
         f"Asegurate de darme el codgigo HTML completo, no dejes etiquetas abiertas y no escribas emojis."
         )
         input_box.send_keys(mensaje)
-        time.sleep(1)
-        input_box.send_keys(Keys.ENTER)
+        time.sleep(2)
+        try:
+            driver.find_element(By.ID, "composer-submit-button").click()
+        except:
+            input_box.send_keys(Keys.ENTER)
         
         time.sleep(4) # Esperar a que se procese la entrada
 
@@ -95,13 +110,14 @@ def promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNE
                     EC.presence_of_element_located((By.TAG_NAME, "code"))
                 )
                 respuesta = waitForResponseChatGPT(driver)
-                
-                if respuesta.strip() and respuesta.strip().endswith("</html>"):
+
+                if respuesta and "<html" in respuesta and "</html>" in respuesta:
                     newEntrada(title, respuesta, driver, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD, directorio ,nombre_imagen)
                     return True
                 else:
-                    print(f"Respuesta vacia o incompleta")
+                    print("❌ Respuesta vacía o no contiene HTML completo.")
                     return False
+                
                 
             except Exception as e:
                 print(f"❌ No se pudo obtener la respuesta de ChatGPT: {e}")
@@ -113,6 +129,7 @@ def promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNE
 
     except Exception as e:
         print(f"❌ Error durante la interacción con ChatGPT: {e}")
+        time.sleep(30)
         return False
 
     finally:

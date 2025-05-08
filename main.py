@@ -14,8 +14,7 @@ def limpiar_nombre_archivo(nombre):
     nombre = re.sub(r'[\s]+', '_', nombre)
     return nombre
 
-
-def main(comprobar_cancelacion=lambda: cancelar, config=None):
+def main(comprobar_cancelacion=lambda: False, config=None):
     if config is None:
         print("❌ No se proporcionó configuración.")
         return
@@ -40,73 +39,87 @@ def main(comprobar_cancelacion=lambda: cancelar, config=None):
     articulos_exitosos = []
     
     options = uc.ChromeOptions()
-    options.headless = False  # Agregado manualmente para evitar el error interno
-    options.add_argument("--disable-gpu") # Para compatibilidad
+    options.headless = False
+    options.add_argument("--disable-gpu")
     driver = uc.Chrome(options=options, use_subprocess=True)
 
-
-
     for articulo in lista_articulos:
-        # Comprobamos que el usuario no haya cancelado la ejecución
         if comprobar_cancelacion():
-            print("Ejecución cancelada por el usuario.")
-            print("Terminando articulo en proceso...")
+            print("⛔ Ejecución cancelada por el usuario.")
             driver.quit()
             break
-        
+
         print(f"🔍 Buscando artículo: {articulo}")
         data = search_items(articulo)
-        if data:
-            title, reviews, image_url, description, enlace = data
-            # Creamos el directorio para guaradar las imágenes de salida si no existe
-            directorio = f"imagenes_"+NOMBRE_ARTICULO
-            if not os.path.exists(directorio):
-                os.makedirs(directorio)
-            
-            # Limpieza del nombre y generación de nombre único con timestamp
-            nombre_limpio = limpiar_nombre_archivo(title)
-            
-            # Crear nombre del archivo
-            nombre_imagen = os.path.join(directorio, f"{nombre_limpio}.jpg")
-            
-            directorio = os.path.dirname(os.path.abspath(__file__))
-            print(f"📁 Directorio del script: {directorio}")
-            
-            try:
-                response = requests.get(image_url, timeout=10)
-                if response.status_code == 200:
-                    with open(nombre_imagen, 'wb') as f:
-                        f.write(response.content)
-                    print(f"✅ Imagen descargada: {nombre_imagen}")
-                else:
-                    print(f"❌ Error HTTP {response.status_code} al descargar la imagen de: {title}")
-            except Exception as e:
-                print(f"❌ Excepción al descargar la imagen de {title}: {e}")
-                
-                
-            exito = promptChatGPT(title, reviews, image_url, description, enlace, driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD, directorio ,nombre_imagen)
-
-            if exito:
-                articulos_exitosos.append(articulo)
-                print(f"✅ Artículo procesado exitosamente: {articulo}")
-            if not exito:
-                print("❌ ChatGPT falló. Probando con Copilot...")
-                exito_copilot = promptCopilot(title, reviews, image_url, description, enlace, driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD)
-                if exito_copilot:
-                    articulos_exitosos.append(articulo)
-                    print(f"✅ Artículo procesado exitosamente con Copilot: {articulo}")
-                else: 
-                    articulos_fallidos.append(articulo)
-                    print(f"❌ Artículo fallido: {articulo}")
-            
-        else:
+        if not data:
             print("⚠️ Artículo no encontrado.")
             articulos_fallidos.append(articulo)
-    
-    print(f"Artículos exitosos: {articulos_exitosos}")
-    print(f"Artículos fallidos: {articulos_fallidos}")
+            continue
+
+        title, reviews, image_url, description, enlace = data
+        directorio = f"imagenes_" + NOMBRE_ARTICULO
+        if not os.path.exists(directorio):
+            os.makedirs(directorio)
+
+        nombre_limpio = limpiar_nombre_archivo(title)
+        nombre_imagen = os.path.join(directorio, f"{nombre_limpio}.jpg")
+
+        try:
+            response = requests.get(image_url, timeout=10)
+            if response.status_code == 200:
+                with open(nombre_imagen, 'wb') as f:
+                    f.write(response.content)
+                print(f"✅ Imagen descargada: {nombre_imagen}")
+            else:
+                print(f"❌ Error HTTP {response.status_code} al descargar imagen.")
+        except Exception as e:
+            print(f"❌ Excepción al descargar la imagen: {e}")
+
+        # Intentamos generar contenido con ChatGPT
+        try:
+            exito = promptChatGPT(
+                title, reviews, image_url, description, enlace,
+                driver, PARTNER_TAG, WORDPRESS_URL, WORDPRESS_EMAIL,
+                WORDPRESS_PASSWORD, directorio, nombre_imagen)
+
+            if not exito:
+                raise Exception("ChatGPT no generó contenido.")
+        
+        except Exception as e:
+            print(f"❌ ChatGPT falló: {e}")
+            # Fallback a Copilot
+            try:
+                exito = promptCopilot(
+                    title, reviews, image_url, description, enlace,
+                    driver, PARTNER_TAG, WORDPRESS_URL,
+                    WORDPRESS_EMAIL, WORDPRESS_PASSWORD
+                )
+                if not exito:
+                    raise Exception("Copilot también falló.")
+            except Exception as e:
+                print(f"❌ Copilot falló: {e}")
+                articulos_fallidos.append(articulo)
+                continue  # No pasamos a la publicación
+
+        # Si el contenido fue generado por ChatGPT o Copilot, intentamos publicarlo
+        try:
+            resultado = newEntrada(
+                title, None, driver,
+                WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_PASSWORD,
+                directorio, nombre_imagen
+            )
+            if not resultado:
+                raise Exception("Error al publicar el contenido.")
+            articulos_exitosos.append(articulo)
+            print(f"✅ Artículo publicado: {articulo}")
+
+        except Exception as e:
+            print(f"❌ Error al publicar: {e}")
+            articulos_fallidos.append(articulo)
+
+    print(f"📦 Artículos exitosos: {articulos_exitosos}")
+    print(f"🗃️ Artículos fallidos: {articulos_fallidos}")
     driver.quit()
-            
 
 if __name__ == "__main__":
     main()

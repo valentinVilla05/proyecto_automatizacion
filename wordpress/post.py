@@ -2,6 +2,7 @@ from datetime import datetime
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import html
 import time
 import urllib.parse
 import os
@@ -21,83 +22,97 @@ def enviar_prompt(input_element, prompt, espera=1):
     if buffer.strip():
         input_element.send_keys(buffer)
         
+def esperar_url_imagen(driver):
+    """Espera hasta que el campo de URL tenga contenido."""
+    for _ in range(20):  # Hasta 10 segundos (20 * 0.5s)
+        try:
+            input_url = driver.find_element(By.ID, 'attachment-details-two-column-copy-link')
+            url = input_url.get_attribute("value")
+            if url:
+                return url
+        except:
+            pass
+        time.sleep(0.5)
+    return None
+
 def subirImagen(driver, directorio, nombre_imagen, WORDPRESS_URL):
     print(f"📁 Directorio recibido: {directorio}")
     print(f"🖼️ Nombre de imagen recibido: {nombre_imagen}")
+    print(f"🌐 WORDPRESS URL: {WORDPRESS_URL}")
 
-    print(f"WORDPRESS URL: {WORDPRESS_URL}")
     url_parseada = WORDPRESS_URL.rstrip("/")
-    if url_parseada.endswith("wp-admin/upload.php"):
-        final_url = url_parseada
-    else:
-        final_url = url_parseada + "/wp-admin/upload.php"
-
-    print(f"📦 URL final para subir imagenes: '{final_url}'")
+    final_url = url_parseada + "/wp-admin/upload.php" if not url_parseada.endswith("wp-admin/upload.php") else url_parseada
+    print(f"📦 URL final para subir imágenes: '{final_url}'")
     driver.get(final_url)
-        
+
     try:
-        # Click en añadir archivo
-        boton_anadir = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="wp-media-grid"]/a')))
+        # 1. Hacer clic en "Añadir nuevo"
+        boton_anadir = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="wp-media-grid"]/a'))
+        )
         boton_anadir.click()
-        
-        input_file = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]')))
-        ruta_completa = os.path.join(directorio, nombre_imagen)
+
+        # 2. Seleccionar archivo
+        input_file = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]'))
+        )
+        ruta_completa = os.path.abspath(nombre_imagen)
         print(f"📁 Ruta completa del archivo: {ruta_completa}")
         if not os.path.isfile(ruta_completa):
             print(f"❌ El archivo no existe en la ruta especificada: {ruta_completa}")
             return False
 
         input_file.send_keys(ruta_completa)
-        
-        # Esperamos hasta que se carguen las imágenes
-        contenedor = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "ul.attachments")))
 
-        # Encuentra el primer <li class="attachment ...">
-        primer_li = contenedor.find_element(By.CSS_SELECTOR, "li.attachment")
+        # 3. Esperar que aparezca la lista de archivos
+        contenedor = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "ul.attachments"))
+        )
 
-        # Haz clic directamente en el <li>, que selecciona la imagen
+        # 4. Hacer clic en la imagen subida (la más reciente)
+        primer_li = WebDriverWait(contenedor, 15).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "li.attachment:first-child"))
+        )
         primer_li.click()
-        
-        # Esperamos que la URL de la imagen esté disponible
-        url_imagen = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'attachment-details-two-column-copy-link')))
-        url_imagen = url_imagen.get_attribute("value") # Esto devuelve la URL de la imagen
 
-        print(f"URL de la imagen: {url_imagen}")
+        # 5. Esperar que el panel lateral se cargue
+        WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, "attachment-details"))
+        )
 
+        # 6. Esperar que el campo tenga la URL
+        url_imagen = esperar_url_imagen(driver)
+        if not url_imagen:
+            print("❌ No se pudo obtener la URL de la imagen.")
+            return False
+
+        print(f"✅ URL de la imagen: {url_imagen}")
         return url_imagen
+
     except Exception as e:
         print(f"❌ Error al subir la imagen: {e}")
         return False
 
-def insertar_imagen(driver, url_imagen):
-    #elemento_imagen = "<img src='" + url_imagen + "' alt='Im    agen' />"
-    
-    bloque_codigo = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.ID, "post-content-0")))
-    
-    contenido_codificado = bloque_codigo.get_attribute("value") # Esto devuelve el contenido HTML del textarea
-    contenido_decodificado = html.unescape(contenido_codificado) # Decodificamos el contenido HTML (&gt; se convierte en >, etc.)
 
-    # Buscamos el boton con la redireccoin a amazon para añadir la imagen antes
-    elementos_amazon = driver.find_elements(By.XPATH, '//*[contains(@href, "amazon.es") or (self::button and .//a[contains(@href, "amazon.es")])]')
+def insertar_imagen_en_prompt(prompt, url_imagen):
+    # Crear el HTML de la imagen
+    imagen_html = f'<img src="{url_imagen}" alt="Imagen de producto" style="max-width:100%; height:auto; margin-bottom:20px;">'
     
-    # Si encontramos el enlace
-    if elemento_enlace_amazon:
-        elemento_amazon = elementos_amazon[0]
-        
-        # Creamos el elemento de la imagen
-        imagen_html = f'<img src="{url_imagen}" alt="Imagen de producto" style="max-width:100%; height:auto; margin-bottom:20px;">'
-        
-        # Insertamos la imagen justo antes del elemento de Amazon       
-        contenido_modificado = contenido_decodificado.replace(elemento_amazon.get_attribute("outerHTML"), imagen_html + "\n" + elemento_amazon.get_attribute("outerHTML"))
+    lineas = prompt.splitlines()
+    nuevo_prompt = []
 
-        # Actualizar el contenido en el <textarea>
-        bloque_codigo.clear()  # Limpiar el <textarea>
-        bloque_codigo.send_keys(contenido_modificado)
-        
-        print("Imagen insertada antes del primer enlace o botón de Amazon con éxito.")
-    else:
-        print("No se encontró un enlace o botón que contenga un enlace de Amazon.")
-        
+    imagen_insertada = False
+    for linea in lineas:
+        if not imagen_insertada and ("amazon.es" in linea or "amazon.com" in linea):
+            nuevo_prompt.append(imagen_html)  # Insertar imagen antes del primer enlace a Amazon
+            imagen_insertada = True
+        nuevo_prompt.append(linea)
+
+    # Si no hay enlace a Amazon, lo dejamos al final
+    if not imagen_insertada:
+        nuevo_prompt.insert(0, imagen_html)
+
+    return "\n".join(nuevo_prompt)        
         
     
 def login(driver, WORDPRESS_EMAIL, WORDPRESS_PASSWORD):
@@ -135,7 +150,10 @@ def newEntrada(title, prompt, driver, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_
     
     login(driver, WORDPRESS_EMAIL, WORDPRESS_PASSWORD)
         
-    imagen_url = subirImagen(driver, directorio, nombre_imagen, WORDPRESS_URL)    
+    imagen_url = subirImagen(driver, directorio, nombre_imagen, WORDPRESS_URL)
+    if not imagen_url:
+        print("❌ No se pudo subir la imagen. Se aborta la publicación.")
+        return 
         
     url_parseada = WORDPRESS_URL.rstrip("/")
     if url_parseada.endswith("wp-admin/post-new.php"):
@@ -151,9 +169,12 @@ def newEntrada(title, prompt, driver, WORDPRESS_URL, WORDPRESS_EMAIL, WORDPRESS_
     input_title.send_keys(title)
     
     input_code = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "post-content-0")))
-    enviar_prompt(input_code, prompt)
+    prompt_modificado = insertar_imagen_en_prompt(prompt, imagen_url)
+    enviar_prompt(input_code, prompt_modificado)
     
-    insertar_imagen(driver, imagen_url)
+    
+    
+    time.sleep(10)  # Espera para ver el resultado antes de cerrar el navegador
 
     # Publicar entrada (descomenta cuando estés listo para publicar)
     # boton_publicar = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//*[@id=\"editor\"]/div/div[1]/div/div[1]/div/div[4]/button[2]")))
